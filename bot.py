@@ -3,7 +3,8 @@ import yt_dlp
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
-TOKEN = os.getenv(8547077194:AAGp53o356G1sFAg1-levnSnAviaANbXTFk)
+TOKEN = os.getenv("BOT_TOKEN")
+
 
 async def download_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text
