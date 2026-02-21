@@ -1,31 +1,36 @@
 import os
 import yt_dlp
-from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
+from telegram.ext import Updater, MessageHandler, Filters
 
-import os
 TOKEN = os.getenv("BOT_TOKEN")
 
 if not TOKEN:
-    raise ValueError("No BOT_TOKEN found. Set environment variable.")
+    raise ValueError("BOT_TOKEN not set!")
 
-
-async def download_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def download(update, context):
     url = update.message.text
-    await update.message.reply_text("Downloading... ⏳")
+    update.message.reply_text("Downloading... ⏳")
 
     ydl_opts = {
         'format': 'best',
         'outtmpl': 'downloaded.%(ext)s'
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
 
-    await update.message.reply_document(document=open(filename, 'rb'))
-    os.remove(filename)
+        update.message.reply_document(open(filename, 'rb'))
+        os.remove(filename)
 
-app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download_handler))
-app.run_polling()
+    except Exception as e:
+        update.message.reply_text(f"Error: {e}")
+
+updater = Updater(TOKEN, use_context=True)
+dp = updater.dispatcher
+dp.add_handler(MessageHandler(Filters.text & ~Filters.command, download))
+
+print("Bot started successfully...")
+updater.start_polling()
+updater.idle()
